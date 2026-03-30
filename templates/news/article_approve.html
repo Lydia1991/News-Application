@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Approve Article – Breaking News{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+
+    <nav aria-label="breadcrumb" class="bn-breadcrumb mb-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="bi bi-house me-1"></i>Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'pending_articles' %}">Pending Review</a></li>
+        <li class="breadcrumb-item active">Approve</li>
+      </ol>
+    </nav>
+
+    <div class="bn-form-card">
+      <div class="bn-form-header" style="background:linear-gradient(135deg,#064e3b,#065f46);">
+        <div class="d-flex align-items-center gap-3">
+          <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">
+            <i class="bi bi-patch-check-fill"></i>
+          </div>
+          <div>
+            <h2 class="mb-0">Editorial Approval</h2>
+            <p class="mb-0">Review the article before publishing it to readers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bn-form-body">
+        <!-- Article summary -->
+        <div style="background:var(--bn-gray-50);border-radius:var(--bn-radius);padding:1.25rem;margin-bottom:1.5rem;border-left:4px solid #198754;">
+          <h4 style="font-weight:800;margin-bottom:.4rem;">{{ article.title }}</h4>
+          <div style="font-size:.85rem;color:var(--bn-muted);display:flex;flex-wrap:wrap;gap:.5rem;">
+            <span><i class="bi bi-person-fill me-1"></i><strong>{{ article.author.username }}</strong></span>
+            {% if article.publisher %}
+              <span>&middot;</span>
+              <span><i class="bi bi-building me-1"></i>{{ article.publisher.name }}</span>
+            {% endif %}
+            <span>&middot;</span>
+            <span><i class="bi bi-calendar3 me-1"></i>{{ article.created_at|date:"N j, Y" }}</span>
+          </div>
+        </div>
+
+        <!-- What happens banner -->
+        <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:var(--bn-radius);padding:1rem 1.25rem;margin-bottom:1.5rem;">
+          <p style="font-weight:700;margin-bottom:.5rem;color:#92400e;">
+            <i class="bi bi-info-circle-fill me-2"></i>Approving this article will:
+          </p>
+          <ul style="margin:0;padding-left:1.25rem;color:#78350f;font-size:.9rem;">
+            <li>Publish it publicly for all readers to view.</li>
+            <li>Send an email notification to all relevant subscribers.</li>
+            <li>Log the approval event to the REST API (<code>/api/approved/</code>).</li>
+          </ul>
+        </div>
+
+        <!-- Content preview -->
+        <div class="mb-4">
+          <div class="section-label"><i class="bi bi-file-text me-1"></i>Article Preview</div>
+          <div style="background:var(--bn-gray-50);border:1px solid var(--bn-gray-200);border-radius:var(--bn-radius);padding:1.25rem;max-height:260px;overflow-y:auto;font-size:.93rem;line-height:1.7;white-space:pre-wrap;color:var(--bn-text);">
+            {{ article.content|truncatewords:120 }}
+          </div>
+        </div>
+
+        <form method="post" class="d-flex gap-3 flex-wrap">
+          {% csrf_token %}
+          <div class="w-100 mb-1">
+            <label for="editor_feedback" class="form-label fw-semibold">Editorial feedback (optional)</label>
+            <textarea
+              id="editor_feedback"
+              name="editor_feedback"
+              rows="3"
+              class="form-control"
+              placeholder="Share quick notes with the journalist about this approval."
+            ></textarea>
+          </div>
+          <button type="submit" class="btn btn-success px-4">
+            <i class="bi bi-check2-circle me-1"></i>Approve &amp; Publish
+          </button>
+          <a href="{% url 'pending_articles' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Queue
+          </a>
+          <a href="{% url 'article_detail' article.pk %}" class="btn btn-outline-primary">
+            <i class="bi bi-eye me-1"></i>Full View
+          </a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

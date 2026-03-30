@@ -1,0 +1,415 @@
+{% extends "base.html" %}
+{% block title %}Home – Breaking News{% endblock %}
+
+{% block content %}
+
+<!-- Hero / Welcome Banner -->
+{% if not user.is_authenticated %}
+<div class="bn-hero mb-4 bn-reveal">
+  <span class="hero-label"><i class="bi bi-broadcast me-1"></i>Welcome</span>
+  <div class="row align-items-center">
+    <div class="col-md-8">
+      <h1 class="hero-title">Stay Ahead with <span style="color:var(--bn-red-light);">Breaking News</span></h1>
+      <p class="hero-excerpt">
+        Real-time reporting, editorial-approved articles, and curated newsletters
+        from trusted publishers and journalists.
+      </p>
+      <div class="d-flex gap-2 mt-3" style="position:relative;z-index:1;">
+        <a href="{% url 'register' %}" class="btn btn-bn-primary">
+          <i class="bi bi-person-plus-fill me-1"></i>Get Started
+        </a>
+        <a href="{% url 'login' %}" class="btn btn-bn-outline"
+           style="border-color:rgba(255,255,255,.35);color:rgba(255,255,255,.85);">
+          <i class="bi bi-box-arrow-in-right me-1"></i>Sign In
+        </a>
+      </div>
+    </div>
+    <div class="col-md-4 text-end d-none d-md-flex justify-content-end align-items-center" style="position:relative;z-index:1;">
+      <i class="bi bi-newspaper" style="font-size:6rem;opacity:.18;color:#fff;"></i>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if user.is_authenticated and user.role == 'editor' %}
+<!-- Editor quick-stat bar -->
+<div class="row g-3 mb-4 bn-reveal bn-reveal-delay-1">
+  <div class="col-6 col-md-3">
+    <div class="stat-tile">
+      <div class="stat-icon red"><i class="bi bi-clock-history"></i></div>
+      <div>
+        <div class="stat-value">{{ pending_count|default:"0" }}</div>
+        <div class="stat-label">Pending</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-tile">
+      <div class="stat-icon green"><i class="bi bi-check2-all"></i></div>
+      <div>
+        <div class="stat-value">{{ approved_count|default:"0" }}</div>
+        <div class="stat-label">Approved</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-tile">
+      <div class="stat-icon blue"><i class="bi bi-people-fill"></i></div>
+      <div>
+        <div class="stat-value">{{ total_articles|default:"0" }}</div>
+        <div class="stat-label">Total Articles</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-tile">
+      <div class="stat-icon yellow"><i class="bi bi-building-fill"></i></div>
+      <div>
+        <div class="stat-value">{{ publisher_count|default:"0" }}</div>
+        <div class="stat-label">Publishers</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+
+  <!-- ===== Article Feed ===== -->
+  <div class="col-lg-8">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="section-label d-flex align-items-center gap-2">
+        <span><i class="bi bi-newspaper me-1"></i>Latest Articles</span>
+        {% if show_status_filters %}
+          {% if selected_status == 'draft' %}
+            <span class="bn-status-indicator bn-status-draft">Status: Draft</span>
+          {% elif selected_status == 'pending_review' %}
+            <span class="bn-status-indicator bn-status-pending">Status: Pending Review</span>
+          {% elif selected_status == 'published' %}
+            <span class="bn-status-indicator bn-status-published">Status: Published</span>
+          {% else %}
+            <span class="bn-status-indicator bn-status-all">Status: All</span>
+          {% endif %}
+        {% endif %}
+      </div>
+      {% if user.is_authenticated and user.role == 'journalist' %}
+        <a href="{% url 'article_create' %}" class="btn btn-bn-primary btn-sm">
+          <i class="bi bi-plus-lg me-1"></i>Write Article
+        </a>
+      {% endif %}
+    </div>
+
+    <form method="get" class="mb-3">
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input
+          type="search"
+          name="q"
+          class="form-control"
+          placeholder="Search by title, content, author, or publisher"
+          value="{{ search_query }}"
+        >
+        {% if selected_section != 'all' %}
+          <input type="hidden" name="section" value="{{ selected_section }}">
+        {% endif %}
+        {% if show_status_filters and selected_status != 'all' %}
+          <input type="hidden" name="status" value="{{ selected_status }}">
+        {% endif %}
+        {% if selected_section == 'weather' and weather_location_query %}
+          <input type="hidden" name="weather_location" value="{{ weather_location_query }}">
+        {% endif %}
+        <button class="btn btn-bn-primary" type="submit">Search</button>
+      </div>
+    </form>
+
+    {% if show_status_filters %}
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        <a
+          href="{% url 'home' %}?{% if selected_section != 'all' %}section={{ selected_section }}&{% endif %}{% if search_query %}q={{ search_query|urlencode }}&{% endif %}{% if selected_section == 'weather' and weather_location_query %}weather_location={{ weather_location_query|urlencode }}&{% endif %}"
+          class="btn btn-sm btn-status-filter {% if selected_status == 'all' %}btn-status-filter-all-active{% endif %}"
+        >All Statuses</a>
+        {% for value, label in status_choices %}
+          <a
+            href="{% url 'home' %}?status={{ value }}{% if selected_section != 'all' %}&section={{ selected_section }}{% endif %}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if selected_section == 'weather' and weather_location_query %}&weather_location={{ weather_location_query|urlencode }}{% endif %}"
+            class="btn btn-sm btn-status-filter {% if selected_status == value and value == 'draft' %}btn-status-filter-draft-active{% elif selected_status == value and value == 'pending_review' %}btn-status-filter-pending-active{% elif selected_status == value and value == 'published' %}btn-status-filter-published-active{% endif %}"
+          >{{ label }}</a>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <a
+        href="{% url 'home' %}?{% if show_status_filters and selected_status != 'all' %}status={{ selected_status }}&{% endif %}{% if search_query %}q={{ search_query|urlencode }}{% endif %}"
+        class="btn btn-sm {% if selected_section == 'all' %}btn-bn-primary{% else %}btn-bn-outline{% endif %}"
+      >All</a>
+      {% for value, label in section_choices %}
+        <a
+          href="{% url 'home' %}?section={{ value }}{% if show_status_filters and selected_status != 'all' %}&status={{ selected_status }}{% endif %}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if value == 'weather' and weather_location_query %}&weather_location={{ weather_location_query|urlencode }}{% endif %}"
+          class="btn btn-sm {% if selected_section == value %}btn-bn-primary{% else %}btn-bn-outline{% endif %}"
+        >{{ label }}</a>
+      {% endfor %}
+    </div>
+
+    {% if selected_section == 'weather' %}
+      <div class="bn-weather-live-bar mb-3">
+        <form method="get" class="row g-2 align-items-center">
+          <input type="hidden" name="section" value="weather">
+          <input type="hidden" name="live_weather" value="1">
+          {% if search_query %}
+            <input type="hidden" name="q" value="{{ search_query }}">
+          {% endif %}
+          {% if show_status_filters and selected_status != 'all' %}
+            <input type="hidden" name="status" value="{{ selected_status }}">
+          {% endif %}
+          <div class="col-md-8">
+            <label for="weather_location_input" class="form-label mb-1">Check live weather by location</label>
+            <input
+              id="weather_location_input"
+              type="text"
+              name="weather_location"
+              class="form-control"
+              placeholder="Enter city e.g. Harare"
+              value="{{ weather_location_query }}"
+            >
+          </div>
+          <div class="col-md-4 d-grid pt-md-4">
+            <button type="submit" class="btn btn-bn-primary">
+              <i class="bi bi-cloud-sun-fill me-1"></i>Get Weather
+            </button>
+          </div>
+        </form>
+
+        {% if live_weather_summary %}
+          <div class="bn-weather-live-result mt-3">
+            {{ live_weather_summary }}
+          </div>
+        {% elif request.GET.live_weather == '1' %}
+          <div class="bn-weather-live-result mt-3">
+            Weather data is currently unavailable for that location. Try another city.
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if articles %}
+      {% for article in articles %}
+        <div class="article-feed-card mb-3 bn-reveal bn-reveal-delay-1 {% if article.status == 'published' %}approved-card{% else %}pending-card{% endif %}">
+          {% if article.story_image %}
+            <img
+              src="{{ article.story_image.url }}"
+              alt="Image for {{ article.title }}"
+              class="img-fluid"
+              style="width:100%;max-height:320px;object-fit:cover;border-bottom:1px solid rgba(0,0,0,.06);"
+            >
+          {% endif %}
+          <div class="article-body">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <h5 class="article-title">
+                <a href="{% url 'article_detail' article.pk %}">{{ article.title }}</a>
+              </h5>
+              {% if article.status == 'published' %}
+                <span class="bn-badge bn-badge-approved flex-shrink-0">
+                  <i class="bi bi-check-circle-fill"></i>Approved
+                </span>
+              {% elif article.status == 'draft' %}
+                <span class="bn-badge bn-badge-pending flex-shrink-0" style="background:#f1f5f9;color:#334155;">
+                  <i class="bi bi-file-earmark me-1"></i>Draft
+                </span>
+              {% else %}
+                <span class="bn-badge bn-badge-pending flex-shrink-0">
+                  <i class="bi bi-clock-fill"></i>Pending
+                </span>
+              {% endif %}
+            </div>
+
+            <div class="article-meta">
+              <span class="bn-badge bn-badge-pending" style="background:#e8eefb;color:#1f4b9a;border:none;">
+                <i class="bi bi-tag-fill"></i>{{ article.get_section_display }}
+              </span>
+              <span><i class="bi bi-person-fill me-1"></i><strong>{{ article.author.username }}</strong></span>
+              <span class="dot">&middot;</span>
+              {% if article.publisher %}
+                <a href="{% url 'publisher_detail' article.publisher.pk %}" style="color:var(--bn-muted);">
+                  <i class="bi bi-building me-1"></i>{{ article.publisher.name }}
+                </a>
+              {% else %}
+                <span><i class="bi bi-person-workspace me-1"></i>Independent</span>
+              {% endif %}
+              <span class="dot">&middot;</span>
+              <span><i class="bi bi-calendar3 me-1"></i>{{ article.created_at|date:"N j, Y" }}</span>
+            </div>
+
+            <p class="article-excerpt">{{ article.content }}</p>
+
+            {% if article.tags.all %}
+              <div class="d-flex flex-wrap gap-2 mt-2">
+                {% for tag in article.tags.all|slice:":4" %}
+                  <span class="bn-badge" style="background:#f8f4ea;color:#7c5528;border:none;">#{{ tag.name }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="article-actions">
+            <a href="{% url 'article_detail' article.pk %}" class="btn btn-sm btn-bn-outline">
+              <i class="bi bi-book me-1"></i>Read more
+            </a>
+
+            {% if user.is_authenticated and user.role == 'editor' and article.status == 'pending_review' %}
+              <a href="{% url 'article_approve' article.pk %}" class="btn btn-sm btn-success">
+                <i class="bi bi-check-circle me-1"></i>Approve
+              </a>
+            {% endif %}
+
+            {% if user.is_authenticated and user.role == 'editor' or user.is_authenticated and user == article.author %}
+              <a href="{% url 'article_edit' article.pk %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-pencil me-1"></i>Edit
+              </a>
+              <a href="{% url 'article_delete' article.pk %}" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash me-1"></i>Delete
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="bn-empty bn-surface-soft" style="border-radius:var(--bn-radius-lg);">
+        <i class="bi bi-journal-x"></i>
+        {% if selected_section != 'all' and pending_in_selected_section > 0 and not search_query %}
+          <p>
+            No approved stories in this section yet.
+            {{ pending_in_selected_section }} stor{{ pending_in_selected_section|pluralize:'y,ies' }}
+            {{ pending_in_selected_section|pluralize:'is,are' }} awaiting editor approval.
+          </p>
+        {% else %}
+          <p>No articles available yet.
+            {% if user.is_authenticated and user.role == 'journalist' %}
+              <a href="{% url 'article_create' %}">Write the first one!</a>
+            {% endif %}
+          </p>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if is_paginated %}
+      <nav aria-label="Article pagination" class="mt-4">
+        <ul class="pagination pagination-sm">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if show_status_filters and selected_status != 'all' %}&status={{ selected_status }}{% endif %}{% if selected_section != 'all' %}&section={{ selected_section }}{% endif %}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if selected_section == 'weather' and weather_location_query %}&weather_location={{ weather_location_query|urlencode }}{% endif %}">Previous</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+              <li class="page-item active" aria-current="page"><span class="page-link">{{ num }}</span></li>
+            {% else %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if show_status_filters and selected_status != 'all' %}&status={{ selected_status }}{% endif %}{% if selected_section != 'all' %}&section={{ selected_section }}{% endif %}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if selected_section == 'weather' and weather_location_query %}&weather_location={{ weather_location_query|urlencode }}{% endif %}">{{ num }}</a>
+              </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if show_status_filters and selected_status != 'all' %}&status={{ selected_status }}{% endif %}{% if selected_section != 'all' %}&section={{ selected_section }}{% endif %}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if selected_section == 'weather' and weather_location_query %}&weather_location={{ weather_location_query|urlencode }}{% endif %}">Next</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+  </div>
+
+  <!-- ===== Sidebar ===== -->
+  <div class="col-lg-4">
+
+    <!-- Quick actions -->
+    {% if user.is_authenticated %}
+      <div class="bn-sidebar-card mb-3 bn-reveal bn-reveal-delay-1">
+        <div class="sidebar-header">
+          <i class="bi bi-lightning-fill"></i> Quick Actions
+        </div>
+        <div class="quick-actions">
+          {% if user.role == 'journalist' %}
+            <a href="{% url 'article_create' %}" class="btn btn-bn-primary">
+              <i class="bi bi-file-earmark-plus me-1"></i>Write Article
+            </a>
+            <a href="{% url 'newsletter_create' %}" class="btn btn-bn-outline">
+              <i class="bi bi-envelope-plus me-1"></i>Create Newsletter
+            </a>
+          {% elif user.role == 'editor' %}
+            <a href="{% url 'pending_articles' %}" class="btn btn-warning">
+              <i class="bi bi-clock-history me-1"></i>Review Pending Articles
+            </a>
+            <a href="{% url 'publisher_create' %}" class="btn btn-bn-outline">
+              <i class="bi bi-building-add me-1"></i>Add Publisher
+            </a>
+            <a href="{% url 'newsletter_create' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-envelope-plus me-1"></i>New Newsletter
+            </a>
+          {% elif user.role == 'reader' %}
+            <a href="{% url 'subscriptions' %}" class="btn btn-bn-primary">
+              <i class="bi bi-bell-fill me-1"></i>Manage Subscriptions
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Recent Newsletters -->
+    <div class="bn-sidebar-card mb-3 bn-reveal bn-reveal-delay-2">
+      <div class="sidebar-header">
+        <i class="bi bi-envelope-open-fill"></i> Recent Newsletters
+      </div>
+      <div class="sidebar-body">
+        {% if newsletters %}
+          {% for newsletter in newsletters %}
+            <div class="sidebar-item">
+              <a href="{% url 'newsletter_detail' newsletter.pk %}">{{ newsletter.title }}</a>
+              <small>{{ newsletter.created_at|date:"N j, Y" }}</small>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="sidebar-item">
+            <span style="color:var(--bn-muted);font-size:.88rem;">No newsletters yet.</span>
+          </div>
+        {% endif %}
+      </div>
+      <div class="sidebar-footer">
+        <a href="{% url 'newsletter_list' %}">View all newsletters <i class="bi bi-arrow-right ms-1"></i></a>
+      </div>
+    </div>
+
+    <!-- Publisher spotlight -->
+    <div class="bn-sidebar-card bn-reveal bn-reveal-delay-3">
+      <div class="sidebar-header">
+        <i class="bi bi-building-fill"></i> Publishers
+      </div>
+      <div class="sidebar-body">
+        {% if publishers %}
+          {% for pub in publishers|slice:":5" %}
+            <div class="sidebar-item">
+              <a href="{% url 'publisher_detail' pub.pk %}">
+                <i class="bi bi-dot me-1 text-red"></i>{{ pub.name }}
+              </a>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="sidebar-item">
+            <span style="color:var(--bn-muted);font-size:.88rem;">No publishers yet.</span>
+          </div>
+        {% endif %}
+      </div>
+      <div class="sidebar-footer">
+        <a href="{% url 'publisher_list' %}">View all publishers <i class="bi bi-arrow-right ms-1"></i></a>
+      </div>
+    </div>
+
+  </div><!-- /sidebar -->
+</div>
+{% endblock %}

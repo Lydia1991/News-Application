@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title }} – Breaking News{% endblock %}
+
+{% block content %}
+<div class="row g-4 bn-reveal">
+  <div class="col-lg-8">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="bn-breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="bi bi-house me-1"></i>Home</a></li>
+        <li class="breadcrumb-item active">{{ article.title|truncatewords:8 }}</li>
+      </ol>
+    </nav>
+
+    <!-- Article card -->
+    <article class="bn-surface-soft" style="border-radius:var(--bn-radius-lg);overflow:hidden;">
+      <div class="article-detail-header">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          {% if article.status == 'published' %}
+            <span class="bn-badge bn-badge-approved">
+              <i class="bi bi-check-circle-fill"></i>Approved
+            </span>
+            {% if article.approved_by %}
+              <span style="font-size:.8rem;color:var(--bn-muted);">
+                by <strong>{{ article.approved_by.username }}</strong>
+                on {{ article.approved_at|date:"N j, Y" }}
+              </span>
+            {% endif %}
+          {% elif article.status == 'draft' %}
+            <span class="bn-badge bn-badge-pending" style="background:#f1f5f9;color:#334155;">
+              <i class="bi bi-file-earmark me-1"></i>Draft
+            </span>
+          {% else %}
+            <span class="bn-badge bn-badge-pending">
+              <i class="bi bi-clock-fill"></i>Pending Review
+            </span>
+          {% endif %}
+        </div>
+
+        <h1 class="article-detail-title">{{ article.title }}</h1>
+
+        <div style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;font-size:.88rem;color:var(--bn-muted);">
+          <span class="bn-badge bn-badge-pending" style="background:#e8eefb;color:#1f4b9a;border:none;">
+            <i class="bi bi-tag-fill"></i>{{ article.get_section_display }}
+          </span>
+          <span><i class="bi bi-person-fill me-1"></i><strong style="color:var(--bn-text);">{{ article.author.username }}</strong></span>
+          <span style="color:var(--bn-gray-400);">|</span>
+          {% if article.publisher %}
+            <a href="{% url 'publisher_detail' article.publisher.pk %}" style="color:var(--bn-muted);">
+              <i class="bi bi-building me-1"></i>{{ article.publisher.name }}
+            </a>
+          {% else %}
+            <span><i class="bi bi-person-workspace me-1"></i>Independent</span>
+          {% endif %}
+          <span style="color:var(--bn-gray-400);">|</span>
+          <span><i class="bi bi-calendar3 me-1"></i>{{ article.created_at|date:"N j, Y, g:i a" }}</span>
+        </div>
+
+        {% if article.tags.all %}
+          <div class="mt-3 d-flex flex-wrap gap-2">
+            {% for tag in article.tags.all %}
+              <span class="bn-badge" style="background:#f8f4ea;color:#7c5528;border:none;">#{{ tag.name }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="article-detail-body">
+        {% if article.story_image %}
+          <div class="mb-3">
+            <img
+              src="{{ article.story_image.url }}"
+              alt="Image for {{ article.title }}"
+              class="img-fluid rounded"
+              style="max-height:460px;object-fit:cover;width:100%;"
+            >
+          </div>
+        {% endif %}
+        {{ article.content }}
+      </div>
+
+      {% if article.editor_feedback %}
+        <div class="px-4 pb-4">
+          <div class="bn-surface-soft" style="border:1px solid var(--bn-gray-200);padding:1rem;border-radius:var(--bn-radius);">
+            <div class="section-label mb-1"><i class="bi bi-chat-left-text me-1"></i>Editor Feedback</div>
+            <div style="white-space:pre-wrap;">{{ article.editor_feedback }}</div>
+          </div>
+        </div>
+      {% endif %}
+    </article>
+
+    <!-- Action buttons -->
+    {% if user.is_authenticated %}
+      <div class="mt-3 d-flex gap-2 flex-wrap">
+        {% if user.role == 'editor' and article.status == 'pending_review' %}
+          <a href="{% url 'article_approve' article.pk %}" class="btn btn-success">
+            <i class="bi bi-check-circle me-1"></i>Approve
+          </a>
+        {% endif %}
+        {% if user.role == 'editor' or article.author == user %}
+          <a href="{% url 'article_edit' article.pk %}" class="btn btn-outline-secondary">
+            <i class="bi bi-pencil me-1"></i>Edit
+          </a>
+        {% endif %}
+        {% if user.role == 'editor' or article.author == user %}
+          <a href="{% url 'article_delete' article.pk %}" class="btn btn-outline-danger">
+            <i class="bi bi-trash me-1"></i>Delete
+          </a>
+        {% endif %}
+        <a href="{% url 'home' %}" class="btn btn-bn-outline">
+          <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+      </div>
+    {% endif %}
+
+  </div><!-- /main col -->
+
+  <!-- Sidebar -->
+  <div class="col-lg-4">
+    <div class="bn-sidebar-card bn-reveal bn-reveal-delay-1 mb-3">
+      <div class="sidebar-header">
+        <i class="bi bi-person-fill"></i> More by {{ article.author.username }}
+      </div>
+      <div class="sidebar-body">
+        {% for a in article.author.articles.all %}
+          {% if a.pk != article.pk and a.approved %}
+            <div class="sidebar-item">
+              <a href="{% url 'article_detail' a.pk %}">{{ a.title }}</a>
+              <small>{{ a.created_at|date:"N j, Y" }}</small>
+            </div>
+          {% endif %}
+        {% empty %}
+          <div class="sidebar-item">
+            <span style="color:var(--bn-muted);font-size:.88rem;">No other articles.</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="bn-sidebar-card bn-reveal bn-reveal-delay-2">
+      <div class="sidebar-header">
+        <i class="bi bi-compass-fill"></i> Related Stories
+      </div>
+      <div class="sidebar-body">
+        {% for related in related_articles %}
+          <div class="sidebar-item">
+            <a href="{% url 'article_detail' related.pk %}">{{ related.title }}</a>
+            <small>{{ related.get_section_display }} • {{ related.created_at|date:"N j, Y" }}</small>
+          </div>
+        {% empty %}
+          <div class="sidebar-item">
+            <span style="color:var(--bn-muted);font-size:.88rem;">No related stories yet.</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

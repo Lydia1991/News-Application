@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{{ publisher.name }} – Breaking News{% endblock %}
+
+{% block content %}
+
+<!-- Page header -->
+<div class="bn-page-header mb-4" style="margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px;">
+  <div class="section-label" style="color:rgba(255,255,255,.55);"><i class="bi bi-building-fill me-1"></i>Publisher</div>
+  <h1>{{ publisher.name }}</h1>
+  {% if publisher.description %}
+    <p class="subtitle">{{ publisher.description }}</p>
+  {% endif %}
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="section-label mb-3"><i class="bi bi-newspaper me-1"></i>Published Articles</div>
+
+    {% for article in articles %}
+      <div class="article-feed-card approved-card mb-3">
+        <div class="article-body">
+          <h5 class="article-title">
+            <a href="{% url 'article_detail' article.pk %}">{{ article.title }}</a>
+          </h5>
+          <div class="article-meta">
+            <span><i class="bi bi-person-fill me-1"></i>{{ article.author.username }}</span>
+            <span class="dot">&middot;</span>
+            <span><i class="bi bi-calendar3 me-1"></i>{{ article.created_at|date:"N j, Y" }}</span>
+          </div>
+          <p class="article-excerpt">{{ article.content }}</p>
+        </div>
+        <div class="article-actions">
+          <a href="{% url 'article_detail' article.pk %}" class="btn btn-sm btn-bn-outline">
+            <i class="bi bi-book me-1"></i>Read more
+          </a>
+        </div>
+      </div>
+    {% empty %}
+      <div class="bn-empty" style="background:var(--bn-surface);border-radius:var(--bn-radius-lg);box-shadow:var(--bn-shadow-sm);">
+        <i class="bi bi-journal-x"></i>
+        <p>No approved articles yet.</p>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="col-lg-4">
+    <div class="bn-sidebar-card mb-3">
+      <div class="sidebar-header"><i class="bi bi-shield-fill-check"></i> Editors</div>
+      <div class="sidebar-body">
+        {% for editor in publisher.editors.all %}
+          <div class="sidebar-item">
+            <span><i class="bi bi-person me-1 text-red"></i>{{ editor.username }}</span>
+          </div>
+        {% empty %}
+          <div class="sidebar-item"><span style="color:var(--bn-muted);font-size:.88rem;">None listed.</span></div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="bn-sidebar-card mb-3">
+      <div class="sidebar-header"><i class="bi bi-pencil-fill"></i> Journalists</div>
+      <div class="sidebar-body">
+        {% for journalist in publisher.journalists.all %}
+          <div class="sidebar-item">
+            <span><i class="bi bi-person me-1 text-red"></i>{{ journalist.username }}</span>
+          </div>
+        {% empty %}
+          <div class="sidebar-item"><span style="color:var(--bn-muted);font-size:.88rem;">None listed.</span></div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if user.is_authenticated and user.role == 'reader' %}
+      <div class="bn-sidebar-card">
+        <div class="sidebar-header"><i class="bi bi-bell-fill"></i> Subscription</div>
+        <div style="padding:1rem;">
+          {% if user in publisher.subscribers.all %}
+            <span class="bn-badge bn-badge-approved mb-2 d-inline-block">
+              <i class="bi bi-check-circle-fill"></i>Subscribed
+            </span>
+          {% endif %}
+          <a href="{% url 'subscriptions' %}" class="btn btn-bn-outline btn-sm w-100 mt-2">
+            <i class="bi bi-bell me-1"></i>Manage Subscriptions
+          </a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Pending Articles – Breaking News{% endblock %}
+
+{% block content %}
+
+<!-- Page header -->
+<div class="bn-page-header mb-4" style="margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px;">
+  <div class="section-label" style="color:rgba(255,255,255,.55);"><i class="bi bi-shield-fill-check me-1"></i>Editorial Queue</div>
+  <h1><i class="bi bi-clock-history me-2"></i>Pending Review</h1>
+  <p class="subtitle">Articles awaiting your editorial approval before going live.</p>
+  <div class="mt-2">
+    {% if selected_status == 'draft' %}
+      <span class="bn-status-indicator bn-status-draft">Status: Draft</span>
+    {% elif selected_status == 'pending_review' %}
+      <span class="bn-status-indicator bn-status-pending">Status: Pending Review</span>
+    {% elif selected_status == 'published' %}
+      <span class="bn-status-indicator bn-status-published">Status: Published</span>
+    {% else %}
+      <span class="bn-status-indicator bn-status-all">Status: All</span>
+    {% endif %}
+  </div>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+  <a
+    href="{% url 'pending_articles' %}"
+    class="btn btn-sm btn-status-filter {% if selected_status == 'all' %}btn-status-filter-all-active{% endif %}"
+  >All Statuses</a>
+  {% for value, label in status_choices %}
+    <a
+      href="{% url 'pending_articles' %}?status={{ value }}"
+      class="btn btn-sm btn-status-filter {% if selected_status == value and value == 'draft' %}btn-status-filter-draft-active{% elif selected_status == value and value == 'pending_review' %}btn-status-filter-pending-active{% elif selected_status == value and value == 'published' %}btn-status-filter-published-active{% endif %}"
+    >{{ label }}</a>
+  {% endfor %}
+</div>
+
+{% if pending %}
+  <div style="background:var(--bn-surface);border-radius:var(--bn-radius-lg);box-shadow:var(--bn-shadow);overflow:hidden;">
+    <div class="table-responsive">
+      <table class="bn-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Publisher</th>
+            <th>Submitted</th>
+            <th style="text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for article in pending %}
+            <tr>
+              <td>
+                <a href="{% url 'article_detail' article.pk %}" style="font-weight:600;color:var(--bn-text);">
+                  {{ article.title }}
+                </a>
+              </td>
+              <td>
+                <span style="font-size:.88rem;">
+                  <i class="bi bi-person me-1 text-red"></i>{{ article.author.username }}
+                </span>
+              </td>
+              <td>
+                <span style="font-size:.88rem;color:var(--bn-muted);">
+                  {% if article.publisher %}
+                    <i class="bi bi-building me-1"></i>{{ article.publisher.name }}
+                  {% else %}
+                    <em>Independent</em>
+                  {% endif %}
+                </span>
+              </td>
+              <td>
+                <span style="font-size:.85rem;color:var(--bn-muted);">
+                  <i class="bi bi-calendar3 me-1"></i>{{ article.created_at|date:"N j, Y" }}
+                </span>
+              </td>
+              <td style="text-align:right;">
+                {% if article.status == 'pending_review' %}
+                  <a href="{% url 'article_approve' article.pk %}" class="btn btn-sm btn-success me-1">
+                    <i class="bi bi-check2-circle me-1"></i>Approve
+                  </a>
+                {% else %}
+                  <span class="badge text-bg-light me-1">{{ article.get_status_display }}</span>
+                {% endif %}
+                <a href="{% url 'article_detail' article.pk %}" class="btn btn-sm btn-outline-secondary">
+                  <i class="bi bi-eye me-1"></i>View
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <p style="font-size:.85rem;color:var(--bn-muted);margin-top:.75rem;">
+    <i class="bi bi-info-circle me-1"></i>{{ pending|length }} article{{ pending|length|pluralize }} shown for this status.
+  </p>
+
+{% else %}
+  <div class="bn-empty" style="background:var(--bn-surface);border-radius:var(--bn-radius-lg);box-shadow:var(--bn-shadow-sm);">
+    <i class="bi bi-check2-circle" style="color:#198754;"></i>
+    <p style="color:var(--bn-text);font-weight:600;">All clear!</p>
+    <p>No articles are currently pending review. Great work.</p>
+  </div>
+{% endif %}
+
+<a href="{% url 'home' %}" class="btn btn-bn-outline mt-3">
+  <i class="bi bi-arrow-left me-1"></i>Back to Home
+</a>
+{% endblock %}

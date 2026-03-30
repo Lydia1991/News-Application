@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Breaking News Live logo">
+  <defs>
+    <radialGradient id="bn-bg" cx="40%" cy="35%" r="65%">
+      <stop offset="0%"   stop-color="#1e3f7a"/>
+      <stop offset="100%" stop-color="#0c1832"/>
+    </radialGradient>
+    <radialGradient id="bn-globe" cx="45%" cy="42%" r="58%">
+      <stop offset="0%"   stop-color="#22509a"/>
+      <stop offset="100%" stop-color="#0e2a6e"/>
+    </radialGradient>
+    <linearGradient id="bn-ring" x1="10%" y1="10%" x2="90%" y2="90%">
+      <stop offset="0%"   stop-color="#b8b8b8"/>
+      <stop offset="22%"  stop-color="#f6f6f6"/>
+      <stop offset="50%"  stop-color="#787878"/>
+      <stop offset="75%"  stop-color="#e0e0e0"/>
+      <stop offset="100%" stop-color="#a8a8a8"/>
+    </linearGradient>
+    <linearGradient id="bn-blue" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#5bb4ff"/>
+      <stop offset="100%" stop-color="#1552cc"/>
+    </linearGradient>
+    <linearGradient id="bn-red" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#ff5c5c"/>
+      <stop offset="45%"  stop-color="#d81c1c"/>
+      <stop offset="100%" stop-color="#9a0c0c"/>
+    </linearGradient>
+    <linearGradient id="bn-gold" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#ffd040"/>
+      <stop offset="100%" stop-color="#d48000"/>
+    </linearGradient>
+    <linearGradient id="bn-silver" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="55%"  stop-color="#d4d4d4"/>
+      <stop offset="100%" stop-color="#909090"/>
+    </linearGradient>
+    <filter id="bn-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Rounded background -->
+  <rect width="200" height="200" rx="26" fill="url(#bn-bg)"/>
+
+  <!-- Globe fill -->
+  <circle cx="100" cy="100" r="63" fill="url(#bn-globe)"/>
+
+  <!-- Globe grid -->
+  <g fill="none" stroke="#2f6cc0" stroke-width="0.7" opacity="0.55">
+    <line x1="100" y1="37" x2="100" y2="163"/>
+    <ellipse cx="100" cy="100" rx="28" ry="63"/>
+    <ellipse cx="100" cy="100" rx="52" ry="63"/>
+    <ellipse cx="100" cy="100" rx="63" ry="17"/>
+    <ellipse cx="100" cy="100" rx="63" ry="37"/>
+    <ellipse cx="100" cy="100" rx="63" ry="55"/>
+  </g>
+
+  <!-- Ring shadow depth -->
+  <circle cx="100" cy="100" r="75" fill="none" stroke="rgba(0,0,0,0.45)" stroke-width="17"/>
+  <!-- Silver ring -->
+  <circle cx="100" cy="100" r="75" fill="none" stroke="url(#bn-ring)" stroke-width="12"/>
+  <!-- Inner ring highlight -->
+  <circle cx="100" cy="100" r="69" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/>
+
+  <!-- BREAKING blue pill -->
+  <rect x="63" y="60" width="74" height="23" rx="11.5" fill="url(#bn-blue)"/>
+  <rect x="63" y="60" width="74" height="9"  rx="11.5" fill="rgba(255,255,255,0.18)"/>
+  <text x="100" y="76"
+        text-anchor="middle"
+        font-family="Arial Black, Impact, sans-serif"
+        font-size="9.8" font-weight="900" fill="#fff" letter-spacing="1.6">BREAKING</text>
+
+  <!-- NEWS red banner -->
+  <rect x="32" y="86" width="136" height="40" rx="7" fill="url(#bn-red)"/>
+  <rect x="32" y="86" width="136" height="9"  rx="7" fill="rgba(255,255,255,0.14)"/>
+  <text x="100" y="116"
+        text-anchor="middle"
+        font-family="Arial Black, Impact, sans-serif"
+        font-size="30" font-weight="900"
+        fill="url(#bn-silver)" filter="url(#bn-glow)"
+        letter-spacing="4">NEWS</text>
+
+  <!-- LIVE gold ribbon (arrow-left shape) -->
+  <polygon points="103,150 110,128 156,128 156,150" fill="url(#bn-gold)"/>
+  <polygon points="103,150 110,128 107,128 100,150"  fill="#b86a00" opacity="0.7"/>
+  <rect x="110" y="128" width="46" height="22" fill="url(#bn-gold)"/>
+  <text x="134" y="143"
+        text-anchor="middle"
+        font-family="Arial Black, Impact, sans-serif"
+        font-size="10.5" font-weight="900" fill="#1a0800" letter-spacing="2">LIVE</text>
+
+  <!-- Blue lens flare at bottom-left of ring -->
+  <ellipse cx="52" cy="140" rx="13" ry="7"
+           fill="rgba(80,170,255,0.28)"
+           transform="rotate(-35 52 140)"/>
+  <ellipse cx="55" cy="137" rx="5" ry="3"
+           fill="rgba(160,220,255,0.45)"
+           transform="rotate(-35 55 137)"/>
+</svg>

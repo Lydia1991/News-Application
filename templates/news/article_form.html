@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Article – Breaking News{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+
+    <nav aria-label="breadcrumb" class="bn-breadcrumb mb-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="bi bi-house me-1"></i>Home</a></li>
+        {% if article %}
+          <li class="breadcrumb-item">
+            <a href="{% url 'article_detail' article.pk %}">{{ article.title|truncatewords:6 }}</a>
+          </li>
+        {% endif %}
+        <li class="breadcrumb-item active">{{ action }}</li>
+      </ol>
+    </nav>
+
+    <div class="bn-form-card">
+      <div class="bn-form-header">
+        <div class="d-flex align-items-center gap-3">
+          <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.3rem;">
+            <i class="bi bi-pencil-fill"></i>
+          </div>
+          <div>
+            <h2 class="mb-0">{{ action }} Article</h2>
+            <p class="mb-0">Fill in the details below and save your work.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bn-form-body">
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+
+          <div class="mb-4" data-field-name="title">
+            <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+            {{ form.title }}
+            {% if form.title.help_text %}
+              <div class="form-text">{{ form.title.help_text }}</div>
+            {% endif %}
+            {% if form.title.errors %}
+              <div class="text-danger small mt-1">
+                <i class="bi bi-exclamation-circle me-1"></i>
+                {% for error in form.title.errors %}{{ error }}{% endfor %}
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-4" data-field-name="section">
+                <label for="{{ form.section.id_for_label }}" class="form-label">{{ form.section.label }}</label>
+                {{ form.section }}
+                <div class="form-text">Choose a section first. Weather reveals live-weather options below.</div>
+                {% if form.section.errors %}
+                  <div class="text-danger small mt-1">
+                    <i class="bi bi-exclamation-circle me-1"></i>
+                    {% for error in form.section.errors %}{{ error }}{% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-4" data-field-name="tags">
+                <label for="{{ form.tags.id_for_label }}" class="form-label">{{ form.tags.label }}</label>
+                {{ form.tags }}
+                <div class="form-text">Optional. Hold Ctrl/Cmd to select multiple tags.</div>
+                {% if form.tags.errors %}
+                  <div class="text-danger small mt-1">
+                    <i class="bi bi-exclamation-circle me-1"></i>
+                    {% for error in form.tags.errors %}{{ error }}{% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-4" data-field-name="publisher">
+                <label for="{{ form.publisher.id_for_label }}" class="form-label">{{ form.publisher.label }}</label>
+                {{ form.publisher }}
+                {% if form.publisher.help_text %}
+                  <div class="form-text">{{ form.publisher.help_text }}</div>
+                {% endif %}
+                {% if form.publisher.errors %}
+                  <div class="text-danger small mt-1">
+                    <i class="bi bi-exclamation-circle me-1"></i>
+                    {% for error in form.publisher.errors %}{{ error }}{% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div class="bn-weather-panel mb-4">
+            <div class="d-flex align-items-start gap-3 mb-3">
+              <div style="width:40px;height:40px;border-radius:50%;background:rgba(35,56,111,.10);display:flex;align-items:center;justify-content:center;color:#22386f;font-size:1rem;flex-shrink:0;">
+                <i class="bi bi-cloud-sun-fill"></i>
+              </div>
+              <div>
+                <h5 class="mb-1" style="font-family:var(--bn-headline);font-size:1rem;color:#22386f;">Weather Options</h5>
+                <p class="mb-0 text-muted" style="font-size:.9rem;line-height:1.5;">
+                  Enter a location and decide whether the app should generate a live weather summary for this story.
+                </p>
+              </div>
+            </div>
+            <div class="row g-3">
+              <div class="col-md-7">
+                <div class="mb-0" data-field-name="weather_location">
+                  <label for="{{ form.weather_location.id_for_label }}" class="form-label">{{ form.weather_location.label }}</label>
+                  {{ form.weather_location }}
+                  {% if form.weather_location.help_text %}
+                    <div class="form-text">{{ form.weather_location.help_text }}</div>
+                  {% endif %}
+                  {% if form.weather_location.errors %}
+                    <div class="text-danger small mt-1">
+                      <i class="bi bi-exclamation-circle me-1"></i>
+                      {% for error in form.weather_location.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-5">
+                <div class="mb-0 bn-form-check-row" data-field-name="auto_weather_update">
+                  <div class="form-check mb-0">
+                    {{ form.auto_weather_update }}
+                    <label for="{{ form.auto_weather_update.id_for_label }}" class="form-check-label">{{ form.auto_weather_update.label }}</label>
+                  </div>
+                  {% if form.auto_weather_update.help_text %}
+                    <div class="form-text ms-4">{{ form.auto_weather_update.help_text }}</div>
+                  {% endif %}
+                  {% if form.auto_weather_update.errors %}
+                    <div class="text-danger small mt-1">
+                      <i class="bi bi-exclamation-circle me-1"></i>
+                      {% for error in form.auto_weather_update.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-4" data-field-name="story_image">
+            <label for="{{ form.story_image.id_for_label }}" class="form-label">{{ form.story_image.label }}</label>
+            {{ form.story_image }}
+            {% if form.story_image.help_text %}
+              <div class="form-text">{{ form.story_image.help_text }}</div>
+            {% endif %}
+            {% if form.story_image.errors %}
+              <div class="text-danger small mt-1">
+                <i class="bi bi-exclamation-circle me-1"></i>
+                {% for error in form.story_image.errors %}{{ error }}{% endfor %}
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="mb-4" data-field-name="content">
+            <label for="{{ form.content.id_for_label }}" class="form-label">{{ form.content.label }}</label>
+            {{ form.content }}
+            {% if form.content.help_text %}
+              <div class="form-text">{{ form.content.help_text }}</div>
+            {% endif %}
+            {% if form.content.errors %}
+              <div class="text-danger small mt-1">
+                <i class="bi bi-exclamation-circle me-1"></i>
+                {% for error in form.content.errors %}{{ error }}{% endfor %}
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="d-flex gap-2 mt-2 flex-wrap">
+            {% if user.role == 'journalist' %}
+              <button type="submit" name="submit_review" value="1" class="btn btn-bn-primary">
+                <i class="bi bi-send-check me-1"></i>Submit for Review
+              </button>
+              <button type="submit" name="save_draft" value="1" class="btn btn-outline-secondary">
+                <i class="bi bi-file-earmark me-1"></i>Save as Draft
+              </button>
+            {% else %}
+              <button type="submit" class="btn btn-bn-primary">
+                <i class="bi bi-save me-1"></i>Save Article
+              </button>
+            {% endif %}
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    // Weather-specific inputs are only relevant when section=weather.
+    const sectionField = document.getElementById('id_section');
+    const weatherLocationRow = document.querySelector('[data-field-name="weather_location"]');
+    const autoWeatherRow = document.querySelector('[data-field-name="auto_weather_update"]');
+
+    if (!sectionField || !weatherLocationRow || !autoWeatherRow) {
+      return;
+    }
+
+    function toggleWeatherFields() {
+      const isWeather = sectionField.value === 'weather';
+      // Hide the extra inputs for all other sections to reduce form noise.
+      weatherLocationRow.style.display = isWeather ? 'block' : 'none';
+      autoWeatherRow.style.display = isWeather ? 'block' : 'none';
+    }
+
+    sectionField.addEventListener('change', toggleWeatherFields);
+    toggleWeatherFields();
+  })();
+</script>
+{% endblock %}

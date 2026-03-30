@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Newsletters – Breaking News{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <div class="section-label"><i class="bi bi-envelope-open-fill me-1"></i>Newsletters</div>
+    <h2 style="font-weight:800;margin:.25rem 0 0;">Curated Newsletters</h2>
+  </div>
+  {% if user.is_authenticated and user.role != 'reader' %}
+    <a href="{% url 'newsletter_create' %}" class="btn btn-bn-primary">
+      <i class="bi bi-plus-lg me-1"></i>New Newsletter
+    </a>
+  {% endif %}
+</div>
+
+{% if newsletters %}
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for newsletter in newsletters %}
+      <div class="col">
+        <div class="newsletter-card">
+          <div class="nl-icon">
+            <i class="bi bi-envelope-open-fill"></i>
+          </div>
+          <div class="nl-body">
+            <h5 class="nl-title">
+              <a href="{% url 'newsletter_detail' newsletter.pk %}">{{ newsletter.title }}</a>
+            </h5>
+            <p class="nl-desc">{{ newsletter.description|truncatewords:20|default:"No description." }}</p>
+          </div>
+          <div class="nl-footer">
+            <i class="bi bi-person text-red"></i>
+            <span>{{ newsletter.author.username }}</span>
+            <span style="margin-left:auto;">
+              <i class="bi bi-collection"></i>
+              {{ newsletter.articles.count }} article{{ newsletter.articles.count|pluralize }}
+            </span>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="bn-empty" style="background:var(--bn-surface);border-radius:var(--bn-radius-lg);box-shadow:var(--bn-shadow-sm);">
+    <i class="bi bi-envelope-open"></i>
+    <p>No newsletters yet.
+      {% if user.is_authenticated and user.role != 'reader' %}
+        <a href="{% url 'newsletter_create' %}">Create the first one!</a>
+      {% endif %}
+    </p>
+  </div>
+{% endif %}
+{% endblock %}

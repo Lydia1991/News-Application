@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}{{ newsletter.title }} – Breaking News{% endblock %}
+
+{% block content %}
+
+<!-- Page header -->
+<div class="bn-page-header mb-4" style="margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px;">
+  <div class="section-label" style="color:rgba(255,255,255,.55);"><i class="bi bi-envelope-open-fill me-1"></i>Newsletter</div>
+  <h1>{{ newsletter.title }}</h1>
+  <p class="subtitle">
+    By <strong>{{ newsletter.author.username }}</strong>
+    &middot; {{ newsletter.created_at|date:"N j, Y" }}
+    &middot; {{ newsletter.articles.count }} article{{ newsletter.articles.count|pluralize }}
+  </p>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+
+    {% if newsletter.description %}
+      <div style="background:var(--bn-surface);border-radius:var(--bn-radius-lg);padding:1.5rem;box-shadow:var(--bn-shadow-sm);margin-bottom:1.5rem;border-left:4px solid var(--bn-red);">
+        <p style="margin:0;font-size:1.02rem;line-height:1.7;color:var(--bn-text);">{{ newsletter.description }}</p>
+      </div>
+    {% endif %}
+
+    <div class="section-label mb-3">
+      <i class="bi bi-collection me-1"></i>Articles in this Newsletter
+    </div>
+
+    {% for article in newsletter.articles.all %}
+      <div class="article-feed-card approved-card mb-3">
+        <div class="article-body">
+          <h5 class="article-title">
+            <a href="{% url 'article_detail' article.pk %}">{{ article.title }}</a>
+          </h5>
+          <div class="article-meta">
+            <span><i class="bi bi-person-fill me-1"></i>{{ article.author.username }}</span>
+            {% if article.publisher %}
+              <span class="dot">&middot;</span>
+              <span><i class="bi bi-building me-1"></i>{{ article.publisher.name }}</span>
+            {% endif %}
+            <span class="dot">&middot;</span>
+            <span><i class="bi bi-calendar3 me-1"></i>{{ article.created_at|date:"N j, Y" }}</span>
+          </div>
+          <p class="article-excerpt">{{ article.content }}</p>
+        </div>
+        <div class="article-actions">
+          <a href="{% url 'article_detail' article.pk %}" class="btn btn-sm btn-bn-outline">
+            <i class="bi bi-book me-1"></i>Read more
+          </a>
+        </div>
+      </div>
+    {% empty %}
+      <div class="bn-empty" style="background:var(--bn-surface);border-radius:var(--bn-radius-lg);box-shadow:var(--bn-shadow-sm);">
+        <i class="bi bi-collection"></i>
+        <p>No articles in this newsletter yet.</p>
+      </div>
+    {% endfor %}
+
+    {% if user.is_authenticated %}
+      <div class="d-flex gap-2 mt-3 flex-wrap">
+        {% if user.role == 'editor' or newsletter.author == user %}
+          <a href="{% url 'newsletter_edit' newsletter.pk %}" class="btn btn-outline-secondary">
+            <i class="bi bi-pencil me-1"></i>Edit
+          </a>
+          <a href="{% url 'newsletter_delete' newsletter.pk %}" class="btn btn-outline-danger">
+            <i class="bi bi-trash me-1"></i>Delete
+          </a>
+        {% endif %}
+        <a href="{% url 'newsletter_list' %}" class="btn btn-bn-outline">
+          <i class="bi bi-arrow-left me-1"></i>All Newsletters
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

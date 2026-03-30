@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Sign In – Breaking News{% endblock %}
+
+{# Hide ticker on login for cleaner look #}
+{% block ticker %}{% endblock %}
+
+{% block content %}
+<div class="login-split bn-reveal">
+
+  <!-- Brand panel -->
+  <div class="login-brand-panel col-md-5">
+    <img src="{% static 'breaking-news-logo.svg' %}" alt="Breaking News" class="brand-logo-lg">
+    <h1>Stay<br><span>Informed.</span></h1>
+    <p>Join thousands of readers getting the latest news, approved by our editorial team.</p>
+    <ul class="brand-bullets">
+      <li><i class="bi bi-check-circle-fill"></i> Editorial-approved articles</li>
+      <li><i class="bi bi-check-circle-fill"></i> Subscribe to publishers &amp; journalists</li>
+      <li><i class="bi bi-check-circle-fill"></i> Curated newsletters delivered to you</li>
+      <li><i class="bi bi-check-circle-fill"></i> Real-time breaking news alerts</li>
+    </ul>
+  </div>
+
+  <!-- Form panel -->
+  <div class="login-form-panel col-md-7">
+    <div style="max-width:400px;width:100%;">
+      <h2>Welcome back</h2>
+      <p class="text-muted mb-4" style="font-size:.93rem;">Sign in to your Breaking News account</p>
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger mb-3" style="border-left:4px solid var(--bn-red);">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="post" novalidate autocomplete="off" data-form-kind="news-login">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.GET.next }}">
+
+        <!-- Decoy fields to absorb browser autofill on localhost -->
+        <input type="text" name="username" autocomplete="username" tabindex="-1"
+               style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
+        <input type="password" name="password" autocomplete="current-password" tabindex="-1"
+               style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
+
+        <div class="mb-3">
+          <label for="id_news_username" class="form-label">Username</label>
+          <div class="input-group">
+            <span class="input-group-text" style="background:var(--bn-gray-50);border-right:none;">
+              <i class="bi bi-person" style="color:var(--bn-muted);"></i>
+            </span>
+            <input type="text" name="news_username" id="id_news_username"
+                   class="form-control" style="border-left:none;"
+                   required autofocus readonly
+                   autocomplete="off" autocapitalize="none" spellcheck="false"
+                   placeholder="Enter your username"
+                   onfocus="if (this.hasAttribute('readonly')) this.removeAttribute('readonly');">
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label for="id_news_password" class="form-label">Password</label>
+          <div class="input-group">
+            <span class="input-group-text" style="background:var(--bn-gray-50);border-right:none;">
+              <i class="bi bi-lock" style="color:var(--bn-muted);"></i>
+            </span>
+            <input type="password" name="news_password" id="id_news_password"
+                   class="form-control" style="border-left:none;"
+                   required readonly
+                   autocomplete="new-password"
+                   placeholder="Enter your password"
+                   onfocus="if (this.hasAttribute('readonly')) this.removeAttribute('readonly');">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-login">Sign In <i class="bi bi-arrow-right ms-1"></i></button>
+      </form>
+
+      <div class="login-divider">or</div>
+
+      <p class="text-center mb-0" style="font-size:.9rem;">
+        Don't have an account?
+        <a href="{% url 'register' %}" style="font-weight:600;">Create one now</a>
+      </p>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
