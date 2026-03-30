@@ -1,10 +1,10 @@
+
 """
 urls.py - URL routing for the 'news' application.
 
-All URL patterns are prefixed with '' (root) because they are included
-directly by the project's urls.py.
+Defines all URL patterns for the news app, including authentication, articles, newsletters, publishers, subscriptions, and API endpoints.
+All URL patterns are included directly by the project's urls.py.
 """
-
 from django.urls import path
 from rest_framework.authtoken.views import obtain_auth_token
 

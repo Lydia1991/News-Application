@@ -11,9 +11,12 @@ from .models import ApprovedArticleLog, Article, CustomUser, Newsletter, Publish
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Serializer for user details exposed through API responses."""
-
-    class Meta:
+     """
+    Serializer for user details exposed through API responses.
+    Serializes id, username, email, and role fields of CustomUser.
+    """
+     
+class Meta:
         model = CustomUser
         fields = ['id', 'username', 'email', 'role']
         read_only_fields = fields

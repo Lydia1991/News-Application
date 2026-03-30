@@ -1,5 +1,10 @@
 """Custom DRF permission classes for role-based API access."""
+"""
+permissions.py - Custom DRF permission classes for role-based API access.
 
+Defines permission classes for Reader, Journalist, Editor, and EditorOrJournalist roles.
+Used to restrict API endpoints based on user roles.
+"""
 from rest_framework.permissions import BasePermission
 
 from .utils import can_act_as_editor, can_act_as_journalist, can_act_as_reader
