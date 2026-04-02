@@ -135,3 +135,12 @@ GitHub.sublime-settings
 !.vscode/launch.json 
 !.vscode/extensions.json 
 .history
+
+# Sphinx build
+/docs/build/
+
+# Docker
+*.pid
+
+# Ignore secrets
+secrets.txt
