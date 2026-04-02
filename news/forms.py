@@ -13,9 +13,20 @@ from .models import Article, CustomUser, Newsletter, Publisher, Role, Tag
 
 class RegistrationForm(UserCreationForm):
     """
-    Registration form that lets a new user choose their role (Reader or
-    Journalist).  Editors can only be created through the admin panel to
-    prevent privilege escalation.
+    Registration form that lets a new user choose their role (Reader or Journalist).
+
+    Editors can only be created through the admin panel to prevent privilege escalation.
+
+    Fields
+    ------
+    username : str
+        The username for the new user.
+    email : str
+        The user's email address.
+    role : str
+        The user's role (Reader or Journalist).
+    password1, password2 : str
+        Password fields.
     """
 
     # Limit self-service registration to Reader and Journalist roles only
@@ -32,7 +43,19 @@ class RegistrationForm(UserCreationForm):
         fields = ['username', 'email', 'role', 'password1', 'password2']
 
     def save(self, commit=True):
-        """Save the user and assign them to the appropriate group."""
+        """
+        Save the user and assign them to the appropriate group.
+
+        Parameters
+        ----------
+        commit : bool, optional
+            Whether to commit the save to the database. Defaults to True.
+
+        Returns
+        -------
+        CustomUser
+            The created user instance.
+        """
         user = super().save(commit=False)
         user.role = self.cleaned_data['role']
         if commit:
@@ -41,7 +64,28 @@ class RegistrationForm(UserCreationForm):
 
 
 class ArticleForm(forms.ModelForm):
-    """Form for journalists to create or edit an article."""
+    """
+    Form for journalists to create or edit an article.
+
+    Fields
+    ------
+    title : str
+        Title of the article.
+    section : str
+        Section/category of the article.
+    tags : QuerySet[Tag]
+        Tags for the article.
+    publisher : Publisher or None
+        Publisher for the article (optional).
+    weather_location : str
+        Location for weather articles.
+    story_image : Image
+        Optional image for the article.
+    content : str
+        Main content of the article.
+    auto_weather_update : bool
+        Whether to auto-generate a weather summary (for Weather section).
+    """
 
     auto_weather_update = forms.BooleanField(
         required=False,
@@ -65,7 +109,16 @@ class ArticleForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        # Accept the current user so we can filter publishers
+        """
+        Initialize the ArticleForm, optionally filtering publishers by user.
+
+        Parameters
+        ----------
+        user : CustomUser, optional
+            The current user, used to filter publisher choices.
+        *args, **kwargs :
+            Standard form arguments.
+        """
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         # Make publisher optional (independent article when left blank)
@@ -77,7 +130,18 @@ class ArticleForm(forms.ModelForm):
 
 
 class NewsletterForm(forms.ModelForm):
-    """Form for journalists/editors to create or edit a newsletter."""
+    """
+    Form for journalists/editors to create or edit a newsletter.
+
+    Fields
+    ------
+    title : str
+        Title of the newsletter.
+    description : str
+        Description of the newsletter.
+    articles : QuerySet[Article]
+        Articles included in the newsletter (only approved articles).
+    """
 
     class Meta:
         model = Newsletter
@@ -89,13 +153,34 @@ class NewsletterForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialize the NewsletterForm, limiting articles to approved ones.
+
+        Parameters
+        ----------
+        *args, **kwargs :
+            Standard form arguments.
+        """
         super().__init__(*args, **kwargs)
         # Only include approved articles in the selection
         self.fields['articles'].queryset = Article.objects.filter(status=Article.Status.PUBLISHED)
 
 
 class PublisherForm(forms.ModelForm):
-    """Form for creating or editing a Publisher (admin/editor use)."""
+    """
+    Form for creating or editing a Publisher (admin/editor use).
+
+    Fields
+    ------
+    name : str
+        Name of the publisher.
+    description : str
+        Description of the publisher.
+    editors : QuerySet[CustomUser]
+        Editors for the publisher.
+    journalists : QuerySet[CustomUser]
+        Journalists for the publisher.
+    """
 
     class Meta:
         model = Publisher
@@ -111,6 +196,13 @@ class PublisherForm(forms.ModelForm):
 class SubscriptionForm(forms.ModelForm):
     """
     Form that lets a Reader manage their publisher and journalist subscriptions.
+
+    Fields
+    ------
+    subscribed_publishers : QuerySet[Publisher]
+        Publishers the reader is subscribed to.
+    subscribed_journalists : QuerySet[CustomUser]
+        Journalists the reader is subscribed to.
     """
 
     class Meta:
@@ -122,6 +214,14 @@ class SubscriptionForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialize the SubscriptionForm, limiting journalists to those with the correct role.
+
+        Parameters
+        ----------
+        *args, **kwargs :
+            Standard form arguments.
+        """
         super().__init__(*args, **kwargs)
         # Only show journalists in the journalist subscription list
         self.fields['subscribed_journalists'].queryset = CustomUser.objects.filter(

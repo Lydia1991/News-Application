@@ -25,11 +25,24 @@ class Role(models.TextChoices):
 # ---------------------------------------------------------------------------
 class CustomUser(AbstractUser):
     """
-    Extended user model.
+    Extended user model with role-based access.
 
-    All users have a 'role' field.  Reader-specific and journalist-specific
+    All users have a 'role' field. Reader-specific and journalist-specific
     fields co-exist on the same table; the application enforces that only
     the relevant subset is populated (the other set is NULL/empty).
+
+    Attributes
+    ----------
+    role : str
+        The user's role (reader, journalist, or editor).
+    subscribed_publishers : QuerySet[Publisher]
+        Publishers the reader has subscribed to (readers only).
+    subscribed_journalists : QuerySet[CustomUser]
+        Journalists the reader has subscribed to (readers only).
+    groups : QuerySet[Group]
+        Groups this user belongs to.
+    user_permissions : QuerySet[Permission]
+        Specific permissions for this user.
     """
 
     role = models.CharField(
@@ -77,16 +90,38 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return f'{self.username} ({self.get_role_display()})'
 
+
     def is_reader(self):
-        """Return True if this user has the Reader role."""
+        """
+        Check if this user has the Reader role.
+
+        Returns
+        -------
+        bool
+            True if the user is a Reader, False otherwise.
+        """
         return self.role == Role.READER
 
     def is_journalist(self):
-        """Return True if this user has the Journalist role."""
+        """
+        Check if this user has the Journalist role.
+
+        Returns
+        -------
+        bool
+            True if the user is a Journalist, False otherwise.
+        """
         return self.role == Role.JOURNALIST
 
     def is_editor(self):
-        """Return True if this user has the Editor role."""
+        """
+        Check if this user has the Editor role.
+
+        Returns
+        -------
+        bool
+            True if the user is an Editor, False otherwise.
+        """
         return self.role == Role.EDITOR
 
     def save(self, *args, **kwargs):
@@ -96,6 +131,13 @@ class CustomUser(AbstractUser):
         Reader subscription fields are only meaningful for Reader users.
         If the user role is Journalist or Editor, these many-to-many
         relations are cleared to satisfy the project rule.
+
+        Parameters
+        ----------
+        *args : tuple
+            Positional arguments passed to the parent save method.
+        **kwargs : dict
+            Keyword arguments passed to the parent save method.
         """
         super().save(*args, **kwargs)
 
@@ -110,6 +152,19 @@ class CustomUser(AbstractUser):
 class Publisher(models.Model):
     """
     A curated publication that can have multiple editors and journalists.
+
+    Attributes
+    ----------
+    name : str
+        Name of the publisher.
+    description : str
+        Description of the publisher.
+    created_at : datetime
+        Timestamp when the publisher was created.
+    editors : QuerySet[CustomUser]
+        Editors affiliated with this publisher.
+    journalists : QuerySet[CustomUser]
+        Journalists affiliated with this publisher.
     """
 
     name = models.CharField(max_length=200, unique=True)
@@ -138,7 +193,16 @@ class Publisher(models.Model):
 # Tag
 # ---------------------------------------------------------------------------
 class Tag(models.Model):
-    """Lightweight label used to organize and relate articles."""
+    """
+    Lightweight label used to organize and relate articles.
+
+    Attributes
+    ----------
+    name : str
+        Name of the tag.
+    slug : str
+        URL-friendly slug for the tag.
+    """
 
     name = models.CharField(max_length=50, unique=True)
     slug = models.SlugField(max_length=60, unique=True, blank=True)
@@ -150,6 +214,16 @@ class Tag(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
+        """
+        Save the tag, auto-generating a unique slug if not provided.
+
+        Parameters
+        ----------
+        *args : tuple
+            Positional arguments passed to the parent save method.
+        **kwargs : dict
+            Keyword arguments passed to the parent save method.
+        """
         if not self.slug:
             base_slug = slugify(self.name)[:50] or 'tag'
             slug = base_slug
@@ -171,6 +245,39 @@ class Article(models.Model):
     An article is either:
       - An independent article (publisher is NULL, author is the journalist).
       - A publisher article (publisher is set).
+
+    Attributes
+    ----------
+    title : str
+        Title of the article.
+    content : str
+        Main content of the article.
+    section : str
+        Section/category of the article (e.g., politics, sports).
+    story_image : ImageField
+        Optional image for the article.
+    weather_location : str
+        Location for weather articles.
+    status : str
+        Publication status (draft, pending_review, published).
+    tags : QuerySet[Tag]
+        Tags associated with the article.
+    author : CustomUser
+        The journalist who authored the article.
+    publisher : Publisher or None
+        The publisher, if any.
+    approved : bool
+        Whether the article is approved for publishing.
+    approved_by : CustomUser or None
+        The editor who approved the article.
+    approved_at : datetime or None
+        When the article was approved.
+    editor_feedback : str
+        Feedback from the editor.
+    created_at : datetime
+        When the article was created.
+    updated_at : datetime
+        When the article was last updated.
     """
 
     title = models.CharField(max_length=300)
@@ -263,6 +370,11 @@ class Article(models.Model):
         """
         Enforce the business rule that an article must be linked to at least
         one publishing source: an independent journalist author or a publisher.
+
+        Raises
+        ------
+        ValidationError
+            If both author and publisher are missing.
         """
         # During form validation on create, author is assigned in the view via
         # commit=False after form.is_valid(). Skip this check before the first
@@ -272,9 +384,16 @@ class Article(models.Model):
 
     def save(self, *args, **kwargs):
         """
-        Override save() to record the pre-save approval state on the instance.
-        The post_save signal reads this attribute to decide whether the article
-        just transitioned from unapproved → approved.
+        Save the article, updating approval state and status as needed.
+
+        Records the pre-save approval state on the instance for use by signals.
+
+        Parameters
+        ----------
+        *args : tuple
+            Positional arguments passed to the parent save method.
+        **kwargs : dict
+            Keyword arguments passed to the parent save method.
         """
         if self.approved and self.status != Article.Status.PUBLISHED:
             self.status = Article.Status.PUBLISHED
@@ -302,7 +421,20 @@ class Article(models.Model):
 # ---------------------------------------------------------------------------
 class Newsletter(models.Model):
     """
-    A curated collection of articles assembled by a journalist.
+    A curated collection of articles assembled by a journalist or editor.
+
+    Attributes
+    ----------
+    title : str
+        Title of the newsletter.
+    description : str
+        Description of the newsletter.
+    created_at : datetime
+        When the newsletter was created.
+    author : CustomUser
+        The journalist or editor who created the newsletter.
+    articles : QuerySet[Article]
+        Articles included in the newsletter.
     """
 
     title = models.CharField(max_length=300)
@@ -333,7 +465,14 @@ class Newsletter(models.Model):
         return self.title
 
     def clean(self):
-        """Only journalists and editors can author newsletters."""
+        """
+        Only journalists and editors can author newsletters.
+
+        Raises
+        ------
+        ValidationError
+            If the author is not a journalist or editor.
+        """
         # author_id may be None when the form validates before setting commit=False
         if not self.author_id:
             return
@@ -341,6 +480,16 @@ class Newsletter(models.Model):
             raise ValidationError('Only journalists and editors can author newsletters.')
 
     def save(self, *args, **kwargs):
+        """
+        Save the newsletter after validating author role.
+
+        Parameters
+        ----------
+        *args : tuple
+            Positional arguments passed to the parent save method.
+        **kwargs : dict
+            Keyword arguments passed to the parent save method.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
@@ -351,7 +500,16 @@ class Newsletter(models.Model):
 class ApprovedArticleLog(models.Model):
     """
     Persists each article-approval event received by the /api/approved/
-    endpoint.  This simulates an external system logging approved content.
+    endpoint. This simulates an external system logging approved content.
+
+    Attributes
+    ----------
+    article : Article
+        The approved article being logged.
+    logged_at : datetime
+        When the approval event was logged.
+    notes : str
+        Optional notes about the approval event.
     """
 
     article = models.ForeignKey(

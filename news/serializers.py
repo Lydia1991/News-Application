@@ -11,9 +11,19 @@ from .models import ApprovedArticleLog, Article, CustomUser, Newsletter, Publish
 
 
 class UserSerializer(serializers.ModelSerializer):
-     """
+    """
     Serializer for user details exposed through API responses.
-    Serializes id, username, email, and role fields of CustomUser.
+
+    Fields
+    ------
+    id : int
+        User ID.
+    username : str
+        Username of the user.
+    email : str
+        Email address of the user.
+    role : str
+        Role of the user (reader, journalist, editor).
     """
      
 class Meta:
@@ -23,7 +33,20 @@ class Meta:
 
 
 class PublisherSerializer(serializers.ModelSerializer):
-    """Serializer for Publisher model."""
+    """
+    Serializer for Publisher model.
+
+    Fields
+    ------
+    id : int
+        Publisher ID.
+    name : str
+        Name of the publisher.
+    description : str
+        Description of the publisher.
+    created_at : datetime
+        Timestamp when the publisher was created.
+    """
 
     class Meta:
         model = Publisher
@@ -32,7 +55,24 @@ class PublisherSerializer(serializers.ModelSerializer):
 
 
 class NewsletterSerializer(serializers.ModelSerializer):
-    """Serializer for Newsletter model with nested author details."""
+    """
+    Serializer for Newsletter model with nested author details.
+
+    Fields
+    ------
+    id : int
+        Newsletter ID.
+    title : str
+        Title of the newsletter.
+    description : str
+        Description of the newsletter.
+    created_at : datetime
+        Timestamp when the newsletter was created.
+    author : UserSerializer
+        Author of the newsletter (read-only).
+    article_ids : list[int]
+        IDs of articles included in the newsletter.
+    """
 
     author = UserSerializer(read_only=True)
     article_ids = serializers.PrimaryKeyRelatedField(
@@ -56,7 +96,52 @@ class NewsletterSerializer(serializers.ModelSerializer):
 
 
 class ArticleSerializer(serializers.ModelSerializer):
-    """Serializer for Article model used by the article REST API."""
+    """
+    Serializer for Article model used by the article REST API.
+
+    Fields
+    ------
+    id : int
+        Article ID.
+    title : str
+        Title of the article.
+    content : str
+        Main content of the article.
+    author : int
+        ID of the author (journalist).
+    author_username : str
+        Username of the author (read-only).
+    publisher : int or None
+        ID of the publisher (optional).
+    publisher_name : str or None
+        Name of the publisher (read-only).
+    section : str
+        Section/category of the article.
+    section_display : str
+        Human-readable section name (read-only).
+    status : str
+        Status of the article.
+    status_display : str
+        Human-readable status (read-only).
+    weather_location : str
+        Location for weather articles.
+    story_image : Image
+        Optional image for the article.
+    tag_ids : list[int]
+        IDs of tags associated with the article.
+    tag_names : list[str]
+        Names of tags (read-only).
+    approved : bool
+        Whether the article is approved.
+    editor_feedback : str
+        Feedback from the editor.
+    created_at : datetime
+        When the article was created.
+    updated_at : datetime
+        When the article was last updated.
+    approved_at : datetime or None
+        When the article was approved.
+    """
 
     author_username = serializers.CharField(source='author.username', read_only=True)
     publisher_name = serializers.CharField(source='publisher.name', read_only=True, allow_null=True)
@@ -109,7 +194,19 @@ class ArticleSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        """Create an article owned by the authenticated journalist."""
+        """
+        Create an article owned by the authenticated journalist.
+
+        Parameters
+        ----------
+        validated_data : dict
+            Validated data for the new article.
+
+        Returns
+        -------
+        Article
+            The created Article instance.
+        """
         request = self.context.get('request')
         validated_data['author'] = request.user
         validated_data['status'] = Article.Status.PENDING_REVIEW
@@ -123,6 +220,19 @@ class ApprovedArticleLogSerializer(serializers.ModelSerializer):
 
     On creation (POST), only 'article' and optional 'notes' are required.
     The nested article detail is returned on read (GET).
+
+    Fields
+    ------
+    id : int
+        Log entry ID.
+    article : int
+        ID of the approved article.
+    article_detail : ArticleSerializer
+        Nested article details (read-only).
+    logged_at : datetime
+        When the approval event was logged.
+    notes : str
+        Optional notes about the approval event.
     """
 
     # Nested article info for reads
@@ -134,7 +244,24 @@ class ApprovedArticleLogSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'logged_at', 'article_detail']
 
     def validate_article(self, article):
-        """Ensure the referenced article is actually approved before logging."""
+        """
+        Ensure the referenced article is actually approved before logging.
+
+        Parameters
+        ----------
+        article : Article
+            The article to validate.
+
+        Returns
+        -------
+        Article
+            The validated article instance.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the article is not approved.
+        """
         if not article.approved:
             raise serializers.ValidationError(
                 'Cannot log an unapproved article.'

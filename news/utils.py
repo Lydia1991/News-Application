@@ -26,7 +26,21 @@ def generate_weather_story(location='Harare'):
     Build an automatic weather story snippet for the given location.
 
     Uses Open-Meteo geocoding + forecast endpoints (no API key required).
-    Returns a human-readable string or None if data cannot be fetched.
+
+    Parameters
+    ----------
+    location : str, optional
+        The location (city name) for which to generate the weather story. Defaults to 'Harare'.
+
+    Returns
+    -------
+    str or None
+        Human-readable weather summary, or None if data cannot be fetched.
+
+    Raises
+    ------
+    requests.RequestException
+        If there is a network or API error (caught internally, returns None).
     """
     if not location:
         location = 'Harare'
@@ -113,6 +127,11 @@ def _get_or_create_group_with_permissions(group_name, codenames):
         Human-readable name for the group (e.g. 'Editor').
     codenames : list[str]
         Permission codenames to assign (e.g. ['view_article', 'change_article']).
+
+    Returns
+    -------
+    Group
+        The created or updated Django Group instance.
     """
     group, _ = Group.objects.get_or_create(name=group_name)
 
@@ -132,7 +151,21 @@ def _get_or_create_group_with_permissions(group_name, codenames):
 
 
 def has_group(user, group_name):
-    """Return True when the authenticated user belongs to a Django group."""
+    """
+    Return True when the authenticated user belongs to a Django group.
+
+    Parameters
+    ----------
+    user : User
+        The user to check.
+    group_name : str
+        The group name to check for membership.
+
+    Returns
+    -------
+    bool
+        True if the user is in the group, False otherwise.
+    """
     return bool(
         user
         and user.is_authenticated
@@ -141,17 +174,53 @@ def has_group(user, group_name):
 
 
 def can_act_as_reader(user):
-    """Role-or-group reader check."""
+    """
+    Check if the user can act as a reader (by role or group).
+
+    Parameters
+    ----------
+    user : User
+        The user to check.
+
+    Returns
+    -------
+    bool
+        True if the user is a reader, False otherwise.
+    """
     return bool(user and user.is_authenticated and (user.role == Role.READER or has_group(user, 'Reader')))
 
 
 def can_act_as_journalist(user):
-    """Role-or-group journalist check."""
+    """
+    Check if the user can act as a journalist (by role or group).
+
+    Parameters
+    ----------
+    user : User
+        The user to check.
+
+    Returns
+    -------
+    bool
+        True if the user is a journalist, False otherwise.
+    """
     return bool(user and user.is_authenticated and (user.role == Role.JOURNALIST or has_group(user, 'Journalist')))
 
 
 def can_act_as_editor(user):
-    """Role-or-group editor check."""
+    """
+    Check if the user can act as an editor (by role or group).
+
+    Parameters
+    ----------
+    user : User
+        The user to check.
+
+    Returns
+    -------
+    bool
+        True if the user is an editor, False otherwise.
+    """
     return bool(user and user.is_authenticated and (user.role == Role.EDITOR or has_group(user, 'Editor')))
 
 
@@ -200,6 +269,11 @@ def assign_role_group(user):
     Add a user to the Django group that matches their role.
 
     Also removes stale group memberships from previous roles.
+
+    Parameters
+    ----------
+    user : User
+        The user to assign to the correct group.
     """
     # Map Role constants to group names
     role_to_group = {
@@ -274,6 +348,11 @@ def notify_subscribers(article):
     ----------
     article : Article
         The newly approved article to notify subscribers about.
+
+    Raises
+    ------
+    Exception
+        If sending email fails (logged, not raised).
     """
     from django.core.mail import send_mail
     from django.conf import settings
@@ -332,8 +411,13 @@ def post_to_approved_api(article, request=None):
     article : Article
         The approved article to be logged.
     request : HttpRequest, optional
-        Used to build the absolute URL.  When called from a signal (no
+        Used to build the absolute URL. When called from a signal (no
         request context), falls back to localhost.
+
+    Raises
+    ------
+    requests.RequestException
+        If the POST request fails (logged, not raised).
     """
     if request is not None:
         base_url = request.build_absolute_uri('/api/approved/')

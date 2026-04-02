@@ -56,7 +56,19 @@ from .utils import generate_weather_story
 # ===========================================================================
 
 def register_view(request):
-    """Handle new-user registration and role assignment."""
+    """
+    Handle new-user registration and role assignment.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+
+    Returns
+    -------
+    HttpResponse
+        The rendered registration page or a redirect to home on success.
+    """
     if request.user.is_authenticated:
         return redirect('home')
 
@@ -76,7 +88,19 @@ def register_view(request):
 
 
 def login_view(request):
-    """Authenticate and log in a user."""
+    """
+    Authenticate and log in a user.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+
+    Returns
+    -------
+    HttpResponse
+        The rendered login page or a redirect to home on success.
+    """
     if request.user.is_authenticated:
         return redirect('home')
 
@@ -106,7 +130,19 @@ def login_view(request):
 
 @login_required
 def logout_view(request):
-    """Log out the current user."""
+    """
+    Log out the current user.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+
+    Returns
+    -------
+    HttpResponse
+        Redirect to the login page after logout.
+    """
     logout(request)
     messages.info(request, 'You have been logged out.')
     return redirect('login')
@@ -118,11 +154,21 @@ def logout_view(request):
 
 def home_view(request):
     """
-    Home page.
+    Render the home page with article listings based on user role.
 
-    - Unauthenticated / reader: shows all approved articles.
+    - Unauthenticated/reader: shows all approved articles.
     - Journalist: shows their own articles (any status) + all approved.
     - Editor: shows all articles (approved and pending).
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+
+    Returns
+    -------
+    HttpResponse
+        The rendered home page with context.
     """
     user = request.user
     selected_section = request.GET.get('section', 'all')
@@ -216,7 +262,21 @@ def home_view(request):
 # ===========================================================================
 
 def article_detail_view(request, pk):
-    """Show a single article.  Non-approved articles are hidden from readers."""
+    """
+    Show a single article. Non-approved articles are hidden from readers.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+    pk : int
+        Primary key of the article.
+
+    Returns
+    -------
+    HttpResponse
+        The rendered article detail page or redirect if not permitted.
+    """
     article = get_object_or_404(Article, pk=pk)
     user = request.user
 
@@ -246,7 +306,19 @@ def article_detail_view(request, pk):
 
 @login_required
 def article_create_view(request):
-    """Allow journalists to submit a new article for editorial review."""
+    """
+    Allow journalists to submit a new article for editorial review.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+
+    Returns
+    -------
+    HttpResponse
+        The rendered article form or redirect on success/permission error.
+    """
     if not can_act_as_journalist(request.user):
         messages.error(request, 'Only journalists can create articles.')
         return redirect('home')
@@ -285,7 +357,21 @@ def article_create_view(request):
 
 @login_required
 def article_edit_view(request, pk):
-    """Allow the original journalist or an editor to edit an article."""
+    """
+    Allow the original journalist or an editor to edit an article.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+    pk : int
+        Primary key of the article.
+
+    Returns
+    -------
+    HttpResponse
+        The rendered article form or redirect on success/permission error.
+    """
     article = get_object_or_404(Article, pk=pk)
     user = request.user
 
@@ -338,7 +424,21 @@ def article_edit_view(request, pk):
 
 @login_required
 def article_delete_view(request, pk):
-    """Allow the article author or an editor to delete an article."""
+    """
+    Allow the article author or an editor to delete an article.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+    pk : int
+        Primary key of the article.
+
+    Returns
+    -------
+    HttpResponse
+        The rendered confirmation page or redirect on success/error.
+    """
     article = get_object_or_404(Article, pk=pk)
     user = request.user
 
@@ -359,20 +459,20 @@ def article_approve_view(request, pk):
     """
     Allow an editor (by role or group) to approve a submitted article.
 
-    Access control:
-      - Only users with role='editor' OR belonging to the 'Editor' group
-        may access this view.  All others are redirected with an error.
+    Only users with role='editor' or in the 'Editor' group may access this view.
+    On POST, marks the article as approved, notifies subscribers, and logs the event.
 
-    On POST (confirmation submitted):
-      1. Marks the article approved and records the approving editor + timestamp.
-      2. Explicitly emails all subscribers of the journalist and/or publisher
-         (handled directly here, not relying solely on signals).
-      3. Explicitly POSTs the approval event to the internal /api/approved/
-         REST endpoint to log it (handled directly here as well).
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+    pk : int
+        Primary key of the article.
 
-    Signal note: the post_save signal (signals.py) also fires and performs
-    the same two side-effects, but having the logic here ensures correctness
-    even if signal dispatch is bypassed (e.g. update_fields or bulk ops).
+    Returns
+    -------
+    HttpResponse
+        The rendered approval page or redirect on success/error.
     """
     # ── Access control ────────────────────────────────────────────────────
     if not can_act_as_editor(request.user):
@@ -415,7 +515,19 @@ def article_approve_view(request, pk):
 
 @login_required
 def pending_articles_view(request):
-    """List all articles pending editorial review (editors only)."""
+    """
+    List all articles pending editorial review (editors only).
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+
+    Returns
+    -------
+    HttpResponse
+        The rendered pending articles page or redirect on error.
+    """
     if not can_act_as_editor(request.user):
         messages.error(request, 'Only editors can view the pending articles queue.')
         return redirect('home')
@@ -442,20 +554,58 @@ def pending_articles_view(request):
 # ===========================================================================
 
 def newsletter_list_view(request):
-    """Display all newsletters."""
+    """
+    Display all newsletters.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+
+    Returns
+    -------
+    HttpResponse
+        The rendered newsletter list page.
+    """
     newsletters = Newsletter.objects.all().select_related('author')
     return render(request, 'news/newsletter_list.html', {'newsletters': newsletters})
 
 
 def newsletter_detail_view(request, pk):
-    """Display a single newsletter and its articles."""
+    """
+    Display a single newsletter and its articles.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+    pk : int
+        Primary key of the newsletter.
+
+    Returns
+    -------
+    HttpResponse
+        The rendered newsletter detail page.
+    """
     newsletter = get_object_or_404(Newsletter, pk=pk)
     return render(request, 'news/newsletter_detail.html', {'newsletter': newsletter})
 
 
 @login_required
 def newsletter_create_view(request):
-    """Allow journalists and editors to create a newsletter."""
+    """
+    Allow journalists and editors to create a newsletter.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+
+    Returns
+    -------
+    HttpResponse
+        The rendered newsletter form or redirect on success/error.
+    """
     if can_act_as_reader(request.user):
         messages.error(request, 'Readers cannot create newsletters.')
         return redirect('newsletter_list')
@@ -477,7 +627,21 @@ def newsletter_create_view(request):
 
 @login_required
 def newsletter_edit_view(request, pk):
-    """Allow the newsletter author or an editor to edit a newsletter."""
+    """
+    Allow the newsletter author or an editor to edit a newsletter.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+    pk : int
+        Primary key of the newsletter.
+
+    Returns
+    -------
+    HttpResponse
+        The rendered newsletter form or redirect on success/error.
+    """
     newsletter = get_object_or_404(Newsletter, pk=pk)
     user = request.user
 
@@ -499,7 +663,21 @@ def newsletter_edit_view(request, pk):
 
 @login_required
 def newsletter_delete_view(request, pk):
-    """Allow the newsletter author or an editor to delete a newsletter."""
+    """
+    Allow the newsletter author or an editor to delete a newsletter.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+    pk : int
+        Primary key of the newsletter.
+
+    Returns
+    -------
+    HttpResponse
+        The rendered confirmation page or redirect on success/error.
+    """
     newsletter = get_object_or_404(Newsletter, pk=pk)
     user = request.user
 
@@ -520,13 +698,39 @@ def newsletter_delete_view(request, pk):
 # ===========================================================================
 
 def publisher_list_view(request):
-    """List all publishers."""
+    """
+    List all publishers.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+
+    Returns
+    -------
+    HttpResponse
+        The rendered publisher list page.
+    """
     publishers = Publisher.objects.all()
     return render(request, 'news/publisher_list.html', {'publishers': publishers})
 
 
 def publisher_detail_view(request, pk):
-    """Show details for a single publisher."""
+    """
+    Show details for a single publisher.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+    pk : int
+        Primary key of the publisher.
+
+    Returns
+    -------
+    HttpResponse
+        The rendered publisher detail page.
+    """
     publisher = get_object_or_404(Publisher, pk=pk)
     articles = Article.objects.filter(publisher=publisher, status=Article.Status.PUBLISHED)
     return render(request, 'news/publisher_detail.html', {
@@ -537,7 +741,19 @@ def publisher_detail_view(request, pk):
 
 @login_required
 def publisher_create_view(request):
-    """Allow editors to create a publisher."""
+    """
+    Allow editors to create a publisher.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+
+    Returns
+    -------
+    HttpResponse
+        The rendered publisher form or redirect on success/error.
+    """
     if not can_act_as_editor(request.user):
         messages.error(request, 'Only editors can manage publishers.')
         return redirect('publisher_list')
@@ -560,7 +776,19 @@ def publisher_create_view(request):
 
 @login_required
 def subscription_view(request):
-    """Allow readers to manage their publisher and journalist subscriptions."""
+    """
+    Allow readers to manage their publisher and journalist subscriptions.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The HTTP request object.
+
+    Returns
+    -------
+    HttpResponse
+        The rendered subscriptions form or redirect on success/error.
+    """
     if not can_act_as_reader(request.user):
         messages.error(request, 'Only readers can manage subscriptions.')
         return redirect('home')
