@@ -1,3 +1,12 @@
+
+# -- Django setup for autodoc -----------------------------------------------
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../..'))
+os.environ['DJANGO_SETTINGS_MODULE'] = 'newsproject.settings'
+import django
+django.setup()
+
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -9,20 +18,14 @@
 project = 'News Application'
 copyright = '2026, Your Name'
 author = 'Your Name'
+release = '1.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-import os
-import sys
-import django
-sys.path.insert(0, os.path.abspath('..'))
-os.environ['DJANGO_SETTINGS_MODULE'] = 'newsproject.settings'
-django.setup()
-
 extensions = [
-	'sphinx.ext.autodoc',
-	'sphinx_autodoc_typehints',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.viewcode',
 ]
 
 templates_path = ['_templates']
