@@ -1,0 +1,32 @@
+version: '3.9'
+
+services:
+  mariadb:
+    image: mariadb:11.3
+    restart: always
+    environment:
+      MYSQL_DATABASE: news_db
+      MYSQL_USER: news_user
+      MYSQL_PASSWORD: your_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+  web:
+    build: .
+    command: python manage.py migrate && python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mariadb
+    environment:
+      - DJANGO_SUPERUSER_USERNAME=admin
+      - DJANGO_SUPERUSER_PASSWORD=adminpass
+      - DJANGO_SUPERUSER_EMAIL=admin@example.com
+
+volumes:
+  mariadb_data:
