@@ -1,3 +1,4 @@
+mariadb>=1.1.8
 alabaster==1.0.0
 asgiref==3.11.1
 astroid==4.0.4

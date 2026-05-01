@@ -72,8 +72,15 @@ WSGI_APPLICATION = 'newsproject.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'news_db',  # Update as needed
+        'USER': 'news_user',  # Update as needed
+        'PASSWORD': 'your_password',  # Update as needed
+        'HOST': 'mariadb',  # Use 'localhost' if running MariaDB locally, or service name in Docker
+        'PORT': '3306',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
     }
 }
 
