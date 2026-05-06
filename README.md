@@ -47,12 +47,35 @@ sphinx-build -b html source build/html
 ```
 
 ## Docker Usage
+## Docker Compose Usage
+
+To build and run the application using Docker Compose:
+
+1. Ensure Docker and Docker Compose are installed.
+2. From the project root, run:
+	```
+	docker-compose up --build
+	```
+	This will build the images and start both the Django app and MariaDB database.
+
+3. The web application will be available at http://localhost:8000
+
+To stop the services:
+```
+docker-compose down
+```
+
+You can also use the following for manual Docker usage:
 - Build: `docker build -t news-app .`
 - Run: `docker run -p 8000:8000 news-app`
 
-## Notes
-- Sphinx HTML output is ignored by git (see .gitignore).
-- For static/media files, see the static/ and media/ folders.
-
+### 6. Build Sphinx documentation (optional)
+Sphinx and related tools are now in `requirements-dev.txt`.
+To build documentation locally:
+```
+pip install -r requirements-dev.txt
+cd docs
+sphinx-build -b html source build/html
+```
 ## License
 MIT
